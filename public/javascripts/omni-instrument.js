@@ -156,10 +156,8 @@
     canvas.height = window.innerHeight;
 
     // for retina displays
-    if (window.devicePixelRation >= 2) {
-      canvas.width = canvas.width * window.devicePixelRation;
-      canvas.height = canvas.height * window.devicePixelRation;
-    }
+    canvas.width = canvas.width * window.devicePixelRatio;
+    canvas.height = canvas.height * window.devicePixelRatio;
 
     /*
     Your drawings need to be inside this function otherwise they will be reset when
@@ -167,39 +165,98 @@
     */
     drawStuff();
   }
-  resizeCanvas();
+
 
 
   // IMPORTANT STUFF
-  var START_FRQ = 15;
-  var END_FRQ = 10000;
-  var range = END_FRQ - START_FRQ;
+  var TEXT_OFFSET = 5;
 
-  function pixelToFrq(pixelNum) {
-    return ((pixelNum/canvas.height) * range) + START_FRQ;
+  var startFrq = 15;
+  var endFrq = 10000;
+
+  function getStartFrq() { return startFrq; }
+  function setStartFrq(val) { startFrq = val; }
+  function getEndFrq() { return endFrq; }
+  function setEndFrq(val) { endFrq = val; }
+
+  function getRange() {
+    return endFrq - startFrq;
   }
 
-  function frqToPixel(frq) {
-    return ((frq/range) * canvas.height);
-  }
+  var STANDARD_BLUE = "#06f";
 
-  function getClosestPitch(frq) {
-    var smallestDistance = Number.POSITIVE_INFINITY;
-    var closestPitch;
+  var isDigit = (function() {
+    var re = /^\d$/;
+    return function(c) {
+      return re.test(c);
+    }
+  }());
 
-    for (var pitch in pitches) {
-      var difference = Math.abs(frq - pitch);
-      if (difference <= smallestDistance) {
-        smallestDistance = distance;
-        closestPitch = pitch;
+  function splitPitchName(pitchName) {
+    var nonNumCounter = 0;
+    for (var i=0; i<pitchName.length; i++) {
+      if (isDigit(pitchName.charAt(i))) {
+        break;
+      } else {
+        nonNumCounter += 1;
       }
     }
 
-    return closestPitch;
+    return {text: pitchName.slice(0,nonNumCounter),
+            number: pitchName.slice(nonNumCounter)};
+  }
+
+  function pixelToFrq(pixelNum) {
+    return ((pixelNum/canvas.height) * getRange()) + start_frq;
+  }
+
+  function frqToPixel(frq) {
+    return Math.round((frq/getRange()) * canvas.height) - 1;
+  }
+
+  // You must always add 0.5 in order that the line is drawn in the right way.
+  function drawLines() {
+    for (var pitch in pitches) {
+      var pixelNum = frqToPixel(pitch);
+      c.beginPath();
+      c.moveTo(0.5, ((canvas.height-1) - pixelNum) + 0.5);
+      c.lineTo(canvas.width + 0.5, ((canvas.height-1) - pixelNum) + 0.5);
+      c.stroke();
+
+      c.save();
+      c.fillStyle = STANDARD_BLUE;
+      c.fillText(splitPitchName(pitches[pitch]).text,
+                 TEXT_OFFSET*window.devicePixelRatio,
+                 ((canvas.height-1) - pixelNum) - TEXT_OFFSET*window.devicePixelRatio);
+      var textWidth = c.measureText(splitPitchName(pitches[pitch]).text).width;
+      console.log(textWidth);
+      c.font = "normal 300 9px Ubuntu";
+      c.fillText(splitPitchName(pitches[pitch]).number,
+                 (TEXT_OFFSET+0.75)*window.devicePixelRatio + textWidth,
+                 ((canvas.height-1) - pixelNum) - (TEXT_OFFSET-2)*window.devicePixelRatio);
+      c.restore();
+    }
   }
 
   function drawStuff() {
-    // do your drawing stuff here
+    // Set font to Ubuntu in the ultra-light version
+    c.font = "normal 300 10px Ubuntu";
+    drawLines();
   }
 
+  // Add event listener for touch events and draw a circle there.
+  canvas.addEventListener('touchmove', function(event) {
+    for (var i = 0; i < event.touches.length; i++) {
+      var touch = event.touches[i];
+      c.beginPath();
+      c.arc(touch.pageX, touch.pageY, 20, 0, 2*Math.PI, true);
+      c.fill();
+      c.stroke();
+    }
+  }, false);
+
+  // Call resizeCanvas when the page loads for the first time.
+  resizeCanvas();
+
+  window.c = c;
 })();
