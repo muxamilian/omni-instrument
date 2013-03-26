@@ -152,12 +152,18 @@
   }
 
   var TEXT_OFFSET = 5;
+  var RADIUS = 40;
 
   var canvas = document.getElementById('canvas');
   var c = canvas.getContext('2d');
 
+  var intervalId;
+  var animationRunning = false;
+
   // Set font to Ubuntu in the ultra-light version
   c.font = "normal 300 10px Ubuntu";
+
+  var ongoingTouches = [];
 
   var startFrq = 15;
   var endFrq = 10000;
@@ -189,13 +195,10 @@
   function splitPitchName(pitchName) {
     var nonNumCounter = 0;
     for (var i=0; i<pitchName.length; i++) {
-
       if (isDigit(pitchName.charAt(i)))
         break;
-
       nonNumCounter += 1;
     }
-
     return {text: pitchName.slice(0,nonNumCounter),
             number: pitchName.slice(nonNumCounter)};
   }
@@ -208,17 +211,23 @@
     return Math.round((frq/getRange()) * canvas.height) - 1;
   }
 
+  function ongoingTouchIndexById(idToFind) {
+    for (var i=0; i<ongoingTouches.length; i++) {
+      var id = ongoingTouches[i].identifier;
+
+      if (id == idToFind) {
+        return i;
+      }
+    }
+    // not found
+    return -1;
+  }
+
 
 
   /* ****************************************** *
    * All the stuff that does the drawing itself *
    * ****************************************** */
-
-  document.body.addEventListener('touchmove',
-                                 function(event) {
-                                   event.preventDefault();
-                                 },
-                                 false);
 
   // resize the canvas to fill browser window dynamically
   window.addEventListener('resize', resizeCanvas, false);
@@ -235,18 +244,65 @@
     Your drawings need to be inside this function otherwise they will be reset when
     you resize the browser window and the canvas goes will be cleared.
     */
-    drawStuff();
+    drawLines();
   }
 
-  // Add event listener for touch events and draw a circle there.
+  canvas.addEventListener('touchstart', function(event) {
+    event.preventDefault();
+    var touches = event.changedTouches;
+
+    for (var i=0; i<touches.length; i++) {
+      ongoingTouches.push(touches[i]);
+    }
+
+    if (!animationRunning) {
+      startAnimation();
+    }
+  }, false);
+
   canvas.addEventListener('touchmove', function(event) {
-    for (var i = 0; i < event.touches.length; i++) {
-      drawCircle(event.touches[i].pageX, event.touches[i].pageY);
+    event.preventDefault();
+    var touches = event.changedTouches;
+
+    for (var i=0; i<touches.length; i++) {
+      var index = ongoingTouchIndexById(touches[i].identifier);
+      ongoingTouches.splice(index, 1, touches[i]);
+    }
+  }, false);
+
+  canvas.addEventListener('touchend', function(event) {
+    event.preventDefault();
+    var touches = event.changedTouches;
+
+    for (var i=0; i<touches.length; i++) {
+      var index = ongoingTouchIndexById(touches[i].identifier);
+      ongoingTouches.splice(index, 1);
+    }
+  }, false);
+
+  canvas.addEventListener('touchcancel', function(event) {
+    event.preventDefault();
+    var touches = event.changedTouches;
+
+    for (var i=0; i<touches.length; i++) {
+      var index = ongoingTouchIndexById(touches[i].identifier);
+      ongoingTouches.splice(index, 1);
+    }
+  }, false);
+
+  canvas.addEventListener('touchleave', function(event) {
+    event.preventDefault();
+    var touches = event.changedTouches;
+
+    for (var i=0; i<touches.length; i++) {
+      var index = ongoingTouchIndexById(touches[i].identifier);
+      ongoingTouches.splice(index, 1);
     }
   }, false);
 
   // You must always add 0.5 in order that the line is drawn in the right way.
   function drawLines() {
+    c.clearRect(0, 0, canvas.width-1, canvas.height-1);
     for (var pitch in PITCHES) {
       var pixelNum = frqToPixel(pitch);
       c.beginPath();
@@ -257,19 +313,15 @@
       c.save();
       c.fillStyle = STANDARD_BLUE;
       c.fillText(splitPitchName(PITCHES[pitch]).text,
-                 TEXT_OFFSET*window.devicePixelRatio,
-                 ((canvas.height-1) - pixelNum) - TEXT_OFFSET*window.devicePixelRatio);
+                 TEXT_OFFSET,
+                 ((canvas.height-1) - pixelNum) - TEXT_OFFSET);
       var textWidth = c.measureText(splitPitchName(PITCHES[pitch]).text).width;
       c.font = "normal 300 9px Ubuntu";
       c.fillText(splitPitchName(PITCHES[pitch]).number,
-                 (TEXT_OFFSET+0.75)*window.devicePixelRatio + textWidth,
-                 ((canvas.height-1) - pixelNum) - (TEXT_OFFSET-2)*window.devicePixelRatio);
+                 (TEXT_OFFSET+0.75) + textWidth,
+                 ((canvas.height-1) - pixelNum) - (TEXT_OFFSET-2));
       c.restore();
     }
-  }
-
-  function drawStuff() {
-    drawLines();
   }
 
   // Draws a simple circle at the given position
@@ -277,24 +329,32 @@
     c.save()
     c.fillStyle = STANDARD_BLUE;
     c.beginPath();
-    c.arc(x*window.devicePixelRatio, y*window.devicePixelRatio, 10*window.devicePixelRatio, 0, 2*Math.PI, true);
+    c.arc(x*window.devicePixelRatio, y*window.devicePixelRatio, RADIUS*window.devicePixelRatio, 0, 2*Math.PI, true);
     c.fill();
     c.stroke();
     c.restore();
   }
 
-  var intervalId;
-  var animationRunning = false;
-
   function startAnimation() {
-    if (animationRunning) return;
+    if (animationRunning)
+      return;
 
-    intervalId = window.setInterval(iterate, 50);
+    intervalId = window.setInterval(iterate, 15);
     animationRunning = true;
   }
 
   function iterate() {
+    if(ongoingTouches.length == 0) {
+      clearInterval(intervalId);
+      animationRunning = false;
+      drawLines();
+      return;
+    }
 
+    drawLines();
+    for (var i=0; i<ongoingTouches.length; i++) {
+      drawCircle(ongoingTouches[i].pageX, ongoingTouches[i].pageY);
+    }
   }
 
   /* ************************************************** *
@@ -309,6 +369,6 @@
    * Debugging stuff *
    * *************** */
 
-  window.c = c;
+  window.c = c
 
 })();
