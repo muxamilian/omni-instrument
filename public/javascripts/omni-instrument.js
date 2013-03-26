@@ -1,6 +1,12 @@
 (function() {
 
-  var pitches = {
+
+
+  /* ***************************** *
+   * CONSTANTS and other variables *
+   * ***************************** */
+
+  var PITCHES = {
     16: "C0",
     17: "C♯0",
     18: "D0",
@@ -145,8 +151,74 @@
     31609: "B10",
   }
 
+  var TEXT_OFFSET = 5;
+
   var canvas = document.getElementById('canvas');
   var c = canvas.getContext('2d');
+
+  // Set font to Ubuntu in the ultra-light version
+  c.font = "normal 300 10px Ubuntu";
+
+  var startFrq = 15;
+  var endFrq = 10000;
+
+  window.getStartFrq = function() { return startFrq; }
+  window.setStartFrq = function(val) { startFrq = val; }
+  window.getEndFrq   = function() { return endFrq; }
+  window.setEndFrq   = function(val) { endFrq = val; }
+
+  window.getRange = function() {
+    return endFrq - startFrq;
+  }
+
+  var STANDARD_BLUE = "#06f";
+
+
+
+  /* ***************** *
+   * Utility functions *
+   * ***************** */
+
+  var isDigit = (function() {
+    var re = /^\d$/;
+    return function(c) {
+      return re.test(c);
+    }
+  }());
+
+  function splitPitchName(pitchName) {
+    var nonNumCounter = 0;
+    for (var i=0; i<pitchName.length; i++) {
+
+      if (isDigit(pitchName.charAt(i)))
+        break;
+
+      nonNumCounter += 1;
+    }
+
+    return {text: pitchName.slice(0,nonNumCounter),
+            number: pitchName.slice(nonNumCounter)};
+  }
+
+  function pixelToFrq(pixelNum) {
+    return ((pixelNum/canvas.height) * getRange()) + start_frq;
+  }
+
+  function frqToPixel(frq) {
+    return Math.round((frq/getRange()) * canvas.height) - 1;
+  }
+
+
+
+  /* ****************************************** *
+   * All the stuff that does the drawing itself *
+   * ****************************************** */
+
+  document.body.addEventListener('touchmove',
+                                 function(event) {
+                                   event.preventDefault();
+                                 },
+                                 false);
 
   // resize the canvas to fill browser window dynamically
   window.addEventListener('resize', resizeCanvas, false);
@@ -166,57 +238,16 @@
     drawStuff();
   }
 
-
-
-  // IMPORTANT STUFF
-  var TEXT_OFFSET = 5;
-
-  var startFrq = 15;
-  var endFrq = 10000;
-
-  function getStartFrq() { return startFrq; }
-  function setStartFrq(val) { startFrq = val; }
-  function getEndFrq() { return endFrq; }
-  function setEndFrq(val) { endFrq = val; }
-
-  function getRange() {
-    return endFrq - startFrq;
-  }
-
-  var STANDARD_BLUE = "#06f";
-
-  var isDigit = (function() {
-    var re = /^\d$/;
-    return function(c) {
-      return re.test(c);
+  // Add event listener for touch events and draw a circle there.
+  canvas.addEventListener('touchmove', function(event) {
+    for (var i = 0; i < event.touches.length; i++) {
+      drawCircle(event.touches[i].pageX, event.touches[i].pageY);
     }
-  }());
-
-  function splitPitchName(pitchName) {
-    var nonNumCounter = 0;
-    for (var i=0; i<pitchName.length; i++) {
-      if (isDigit(pitchName.charAt(i))) {
-        break;
-      } else {
-        nonNumCounter += 1;
-      }
-    }
-
-    return {text: pitchName.slice(0,nonNumCounter),
-            number: pitchName.slice(nonNumCounter)};
-  }
-
-  function pixelToFrq(pixelNum) {
-    return ((pixelNum/canvas.height) * getRange()) + start_frq;
-  }
-
-  function frqToPixel(frq) {
-    return Math.round((frq/getRange()) * canvas.height) - 1;
-  }
+  }, false);
 
   // You must always add 0.5 in order that the line is drawn in the right way.
   function drawLines() {
-    for (var pitch in pitches) {
+    for (var pitch in PITCHES) {
       var pixelNum = frqToPixel(pitch);
       c.beginPath();
       c.moveTo(0.5, ((canvas.height-1) - pixelNum) + 0.5);
@@ -225,13 +256,12 @@
 
       c.save();
       c.fillStyle = STANDARD_BLUE;
-      c.fillText(splitPitchName(pitches[pitch]).text,
+      c.fillText(splitPitchName(PITCHES[pitch]).text,
                  TEXT_OFFSET*window.devicePixelRatio,
                  ((canvas.height-1) - pixelNum) - TEXT_OFFSET*window.devicePixelRatio);
-      var textWidth = c.measureText(splitPitchName(pitches[pitch]).text).width;
-      console.log(textWidth);
+      var textWidth = c.measureText(splitPitchName(PITCHES[pitch]).text).width;
       c.font = "normal 300 9px Ubuntu";
-      c.fillText(splitPitchName(pitches[pitch]).number,
+      c.fillText(splitPitchName(PITCHES[pitch]).number,
                  (TEXT_OFFSET+0.75)*window.devicePixelRatio + textWidth,
                  ((canvas.height-1) - pixelNum) - (TEXT_OFFSET-2)*window.devicePixelRatio);
       c.restore();
@@ -239,24 +269,46 @@
   }
 
   function drawStuff() {
-    // Set font to Ubuntu in the ultra-light version
-    c.font = "normal 300 10px Ubuntu";
     drawLines();
   }
 
-  // Add event listener for touch events and draw a circle there.
-  canvas.addEventListener('touchmove', function(event) {
-    for (var i = 0; i < event.touches.length; i++) {
-      var touch = event.touches[i];
-      c.beginPath();
-      c.arc(touch.pageX, touch.pageY, 20, 0, 2*Math.PI, true);
-      c.fill();
-      c.stroke();
-    }
-  }, false);
+  // Draws a simple circle at the given position
+  function drawCircle(x, y) {
+    c.save()
+    c.fillStyle = STANDARD_BLUE;
+    c.beginPath();
+    c.arc(x*window.devicePixelRatio, y*window.devicePixelRatio, 10*window.devicePixelRatio, 0, 2*Math.PI, true);
+    c.fill();
+    c.stroke();
+    c.restore();
+  }
 
-  // Call resizeCanvas when the page loads for the first time.
+  var intervalId;
+  var animationRunning = false;
+
+  function startAnimation() {
+    if (animationRunning) return;
+
+    intervalId = window.setInterval(iterate, 50);
+    animationRunning = true;
+  }
+
+  function iterate() {
+
+  }
+
+  /* ************************************************** *
+   * Call resizeCanvas immediately after the page loads *
+   * ************************************************** */
+
   resizeCanvas();
 
+
+
+  /* *************** *
+   * Debugging stuff *
+   * *************** */
+
   window.c = c;
+
 })();
