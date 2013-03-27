@@ -151,7 +151,7 @@
     31609: "B10",
   }
 
-  var TEXT_OFFSET = 5;
+  var TEXT_OFFSET = 3;
   var RADIUS = 40;
 
   var canvas = document.getElementById('canvas');
@@ -165,8 +165,8 @@
 
   var ongoingTouches = [];
 
-  var startFrq = 15;
-  var endFrq = 10000;
+  var startFrq = 50;
+  var endFrq = 5000;
 
   window.getStartFrq = function() { return startFrq; }
   window.setStartFrq = function(val) { startFrq = val; }
@@ -177,7 +177,13 @@
     return endFrq - startFrq;
   }
 
-  var STANDARD_BLUE = "#06f";
+  var STANDARD_COLOR_1 = "#e11";
+  var STANDARD_COLOR_2 = "#aaa"
+
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  var aCtx = new AudioContext();
+
+  var SOUND_TYPE = 0;
 
 
 
@@ -204,11 +210,11 @@
   }
 
   function pixelToFrq(pixelNum) {
-    return ((pixelNum/canvas.height) * getRange()) + start_frq;
+    return (((canvas.height - pixelNum)/canvas.height) * getRange()) + startFrq;
   }
 
   function frqToPixel(frq) {
-    return Math.round((frq/getRange()) * canvas.height) - 1;
+    return canvas.height - (Math.round(((frq-getStartFrq())/getRange()) * canvas.height));
   }
 
   function ongoingTouchIndexById(idToFind) {
@@ -252,6 +258,14 @@
     var touches = event.changedTouches;
 
     for (var i=0; i<touches.length; i++) {
+      touches[i].oscillator = aCtx.createOscillator();
+      // 0 stands for "sine wave"
+      touches[i].oscillator.type = SOUND_TYPE;
+      // The frequency of the sine wave is dependent on the position
+      touches[i].oscillator.frequency.value = pixelToFrq(touches[i].pageY);
+      touches[i].oscillator.connect(aCtx.destination);
+      touches[i].oscillator.noteOn(0);
+
       ongoingTouches.push(touches[i]);
     }
 
@@ -265,7 +279,16 @@
     var touches = event.changedTouches;
 
     for (var i=0; i<touches.length; i++) {
+      touches[i].oscillator = aCtx.createOscillator();
+      // 0 stands for "sine wave"
+      touches[i].oscillator.type = SOUND_TYPE;
+      // The frequency of the sine wave is dependent on the position
+      touches[i].oscillator.frequency.value = pixelToFrq(touches[i].pageY);
+      touches[i].oscillator.connect(aCtx.destination);
+
       var index = ongoingTouchIndexById(touches[i].identifier);
+      ongoingTouches[index].oscillator.noteOff(0);
+      touches[i].oscillator.noteOn(0);
       ongoingTouches.splice(index, 1, touches[i]);
     }
   }, false);
@@ -276,6 +299,7 @@
 
     for (var i=0; i<touches.length; i++) {
       var index = ongoingTouchIndexById(touches[i].identifier);
+      ongoingTouches[index].oscillator.noteOff(0);
       ongoingTouches.splice(index, 1);
     }
   }, false);
@@ -286,6 +310,7 @@
 
     for (var i=0; i<touches.length; i++) {
       var index = ongoingTouchIndexById(touches[i].identifier);
+      ongoingTouches[index].oscillator.noteOff(0);
       ongoingTouches.splice(index, 1);
     }
   }, false);
@@ -296,30 +321,31 @@
 
     for (var i=0; i<touches.length; i++) {
       var index = ongoingTouchIndexById(touches[i].identifier);
+      ongoingTouches[index].oscillator.noteOff(0);
       ongoingTouches.splice(index, 1);
     }
   }, false);
 
   // You must always add 0.5 in order that the line is drawn in the right way.
   function drawLines() {
-    c.clearRect(0, 0, canvas.width-1, canvas.height-1);
+    c.clearRect(0, 0, canvas.width, canvas.height);
     for (var pitch in PITCHES) {
       var pixelNum = frqToPixel(pitch);
       c.beginPath();
-      c.moveTo(0.5, ((canvas.height-1) - pixelNum) + 0.5);
-      c.lineTo(canvas.width + 0.5, ((canvas.height-1) - pixelNum) + 0.5);
+      c.moveTo(0.5, pixelNum + 0.5);
+      c.lineTo(canvas.width + 0.5, pixelNum + 0.5);
       c.stroke();
 
       c.save();
-      c.fillStyle = STANDARD_BLUE;
+      c.fillStyle = STANDARD_COLOR_1;
       c.fillText(splitPitchName(PITCHES[pitch]).text,
                  TEXT_OFFSET,
-                 ((canvas.height-1) - pixelNum) - TEXT_OFFSET);
+                 pixelNum - TEXT_OFFSET);
       var textWidth = c.measureText(splitPitchName(PITCHES[pitch]).text).width;
       c.font = "normal 300 9px Ubuntu";
       c.fillText(splitPitchName(PITCHES[pitch]).number,
                  (TEXT_OFFSET+0.75) + textWidth,
-                 ((canvas.height-1) - pixelNum) - (TEXT_OFFSET-2));
+                 pixelNum - (TEXT_OFFSET-2));
       c.restore();
     }
   }
@@ -327,7 +353,7 @@
   // Draws a simple circle at the given position
   function drawCircle(x, y) {
     c.save()
-    c.fillStyle = STANDARD_BLUE;
+    c.fillStyle = STANDARD_COLOR_2;
     c.beginPath();
     c.arc(x*window.devicePixelRatio, y*window.devicePixelRatio, RADIUS*window.devicePixelRatio, 0, 2*Math.PI, true);
     c.fill();
@@ -339,7 +365,7 @@
     if (animationRunning)
       return;
 
-    intervalId = window.setInterval(iterate, 15);
+    intervalId = window.setInterval(iterate, 25);
     animationRunning = true;
   }
 
@@ -369,6 +395,8 @@
    * Debugging stuff *
    * *************** */
 
-  window.c = c
+  window.c = c;
+  window.frqToPixel = frqToPixel;
+  window.pixelToFrq = pixelToFrq;
 
 })();
