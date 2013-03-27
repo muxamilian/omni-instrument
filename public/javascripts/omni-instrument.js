@@ -157,6 +157,8 @@
   var canvas = document.getElementById('canvas');
   var c = canvas.getContext('2d');
 
+  var linesCache = null;
+
   var intervalId;
   var animationRunning = false;
 
@@ -239,21 +241,25 @@
   window.addEventListener('resize', resizeCanvas, false);
 
   function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
     // for retina displays
-    canvas.width = canvas.width * window.devicePixelRatio;
-    canvas.height = canvas.height * window.devicePixelRatio;
+    canvas.width = window.innerWidth * window.devicePixelRatio;
+    canvas.height = window.innerHeight * window.devicePixelRatio;
 
     /*
     Your drawings need to be inside this function otherwise they will be reset when
     you resize the browser window and the canvas goes will be cleared.
     */
+
+    // When resizing reset the cache in order that the lines are drawn with the new dimensions
+    linesCache = null;
     drawLines();
   }
 
-  canvas.addEventListener('touchstart', function(event) {
+
+
+  canvas.addEventListener('touchstart', startHandler, false);
+
+  function startHandler(event) {
     event.preventDefault();
     var touches = event.changedTouches;
 
@@ -272,9 +278,11 @@
     if (!animationRunning) {
       startAnimation();
     }
-  }, false);
+  }
 
-  canvas.addEventListener('touchmove', function(event) {
+  canvas.addEventListener('touchmove', moveHandler, false);
+
+  function moveHandler(event) {
     event.preventDefault();
     var touches = event.changedTouches;
 
@@ -291,9 +299,13 @@
       touches[i].oscillator.noteOn(0);
       ongoingTouches.splice(index, 1, touches[i]);
     }
-  }, false);
+  }
 
-  canvas.addEventListener('touchend', function(event) {
+  canvas.addEventListener('touchend', endHandler, false);
+  canvas.addEventListener('touchcancel', endHandler, false);
+  canvas.addEventListener('touchleave', endHandler, false);
+
+  function endHandler(event) {
     event.preventDefault();
     var touches = event.changedTouches;
 
@@ -302,33 +314,17 @@
       ongoingTouches[index].oscillator.noteOff(0);
       ongoingTouches.splice(index, 1);
     }
-  }, false);
-
-  canvas.addEventListener('touchcancel', function(event) {
-    event.preventDefault();
-    var touches = event.changedTouches;
-
-    for (var i=0; i<touches.length; i++) {
-      var index = ongoingTouchIndexById(touches[i].identifier);
-      ongoingTouches[index].oscillator.noteOff(0);
-      ongoingTouches.splice(index, 1);
-    }
-  }, false);
-
-  canvas.addEventListener('touchleave', function(event) {
-    event.preventDefault();
-    var touches = event.changedTouches;
-
-    for (var i=0; i<touches.length; i++) {
-      var index = ongoingTouchIndexById(touches[i].identifier);
-      ongoingTouches[index].oscillator.noteOff(0);
-      ongoingTouches.splice(index, 1);
-    }
-  }, false);
+  }
 
   // You must always add 0.5 in order that the line is drawn in the right way.
   function drawLines() {
+    if (linesCache) {
+      c.putImageData(linesCache, 0, 0);
+      return;
+    }
+
     c.clearRect(0, 0, canvas.width, canvas.height);
+
     for (var pitch in PITCHES) {
       var pixelNum = frqToPixel(pitch);
       c.beginPath();
@@ -347,6 +343,8 @@
                  (TEXT_OFFSET+0.75) + textWidth,
                  pixelNum - (TEXT_OFFSET-2));
       c.restore();
+
+      linesCache = c.getImageData(0, 0, canvas.width, canvas.height);
     }
   }
 
