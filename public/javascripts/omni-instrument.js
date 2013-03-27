@@ -161,6 +161,7 @@
 
   var intervalId;
   var animationRunning = false;
+  var intervalLength = 25;
 
   // Set font to Ubuntu in the ultra-light version
   c.font = "normal 300 10px Ubuntu";
@@ -258,6 +259,10 @@
 
 
   canvas.addEventListener('touchstart', startHandler, false);
+  canvas.addEventListener('mousedown', function(event) {
+    event.changedTouches = [event];
+    startHandler(event);
+  }, false);
 
   function startHandler(event) {
     event.preventDefault();
@@ -281,12 +286,20 @@
   }
 
   canvas.addEventListener('touchmove', moveHandler, false);
+  canvas.addEventListener('mousemove', function(event) {
+    event.changedTouches = [event];
+    moveHandler(event);
+  }, false);
 
   function moveHandler(event) {
     event.preventDefault();
     var touches = event.changedTouches;
 
     for (var i=0; i<touches.length; i++) {
+      var index = ongoingTouchIndexById(touches[i].identifier);
+      if (index == -1)
+        continue;
+
       touches[i].oscillator = aCtx.createOscillator();
       // 0 stands for "sine wave"
       touches[i].oscillator.type = SOUND_TYPE;
@@ -294,7 +307,6 @@
       touches[i].oscillator.frequency.value = pixelToFrq(touches[i].pageY);
       touches[i].oscillator.connect(aCtx.destination);
 
-      var index = ongoingTouchIndexById(touches[i].identifier);
       ongoingTouches[index].oscillator.noteOff(0);
       touches[i].oscillator.noteOn(0);
       ongoingTouches.splice(index, 1, touches[i]);
@@ -304,6 +316,18 @@
   canvas.addEventListener('touchend', endHandler, false);
   canvas.addEventListener('touchcancel', endHandler, false);
   canvas.addEventListener('touchleave', endHandler, false);
+  canvas.addEventListener('mouseup', function(event) {
+    event.changedTouches = [event];
+    endHandler(event);
+  }, false);
+  canvas.addEventListener('mouseout', function(event) {
+    event.changedTouches = [event];
+    endHandler(event);
+  }, false);
+  canvas.addEventListener('mouseleave', function(event) {
+    event.changedTouches = [event];
+    endHandler(event);
+  }, false);
 
   function endHandler(event) {
     event.preventDefault();
@@ -311,6 +335,9 @@
 
     for (var i=0; i<touches.length; i++) {
       var index = ongoingTouchIndexById(touches[i].identifier);
+      if (index == -1)
+        continue;
+
       ongoingTouches[index].oscillator.noteOff(0);
       ongoingTouches.splice(index, 1);
     }
@@ -350,7 +377,7 @@
 
   // Draws a simple circle at the given position
   function drawCircle(x, y) {
-    c.save()
+    c.save();
     c.fillStyle = STANDARD_COLOR_2;
     c.beginPath();
     c.arc(x*window.devicePixelRatio, y*window.devicePixelRatio, RADIUS*window.devicePixelRatio, 0, 2*Math.PI, true);
@@ -363,7 +390,7 @@
     if (animationRunning)
       return;
 
-    intervalId = window.setInterval(iterate, 25);
+    intervalId = window.setInterval(iterate, intervalLength);
     animationRunning = true;
   }
 
