@@ -387,7 +387,7 @@
   }
 
   function startAnimation() {
-    if (animationRunning)
+    if (animationRunnging)
       return;
 
     intervalId = window.setInterval(iterate, intervalLength);
