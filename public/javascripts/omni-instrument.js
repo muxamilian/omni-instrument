@@ -163,6 +163,7 @@
 
   var startFrq = 100;
   var endFrq = 4000;
+
   // Yes, it's a cumbersome name
   var log2OfEndFrqDividedByStartFrq = caltulateLog2OfEndFrqDividedByStartFrq();
   window.getStartFrq = function() { return startFrq; }
@@ -170,6 +171,7 @@
     startFrq = val;
     log2OfEndFrqDividedByStartFrq = caltulateLog2OfEndFrqDividedByStartFrq();
   }
+
   window.getEndFrq   = function() { return endFrq; }
   window.setEndFrq   = function(val) {
     endFrq = val;
@@ -181,9 +183,10 @@
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   var aCtx = new AudioContext();
 
+  // 0 = Sine wave, 1 = Square wave, 2 = Sawtooth wave, 3 = Triangle wave
   var soundType = 0;
   window.getSoundType = function() { return soundType; }
-  window.setStartFrq = function(val) { soundType = val; }
+  window.setSoundType = function(val) { soundType = val; }
 
 
 
@@ -208,10 +211,6 @@
     return {text: pitchName.slice(0,nonNumCounter),
             number: pitchName.slice(nonNumCounter)};
   }
-
-  // function pixelToFrq(pixelNum) {
-  //   return (((canvas.height - pixelNum)/canvas.height) * getRange()) + startFrq;
-  // }
 
   function caltulateLog2OfEndFrqDividedByStartFrq() {
     return Math.log(endFrq/startFrq)/Math.LN2;
@@ -240,9 +239,9 @@
 
 
 
-  /* ****************************************** *
-   * All the stuff that does the drawing itself *
-   * ****************************************** */
+  /* ********************************************** *
+   * All event Listeners and the according handlers *
+   * ********************************************** */
 
   // resize the canvas to fill browser window dynamically
   window.addEventListener('resize', resizeCanvas, false);
@@ -366,6 +365,8 @@
       c.restore();
     }
   }
+
+
 
   /* ************************************************** *
    * Call resizeCanvas immediately after the page loads *
