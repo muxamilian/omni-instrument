@@ -163,7 +163,6 @@
 
   var startFrq = 50;
   var endFrq = 5000;
-
   window.getStartFrq = function() { return startFrq; }
   window.setStartFrq = function(val) { startFrq = val; }
   window.getEndFrq   = function() { return endFrq; }
@@ -179,7 +178,9 @@
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   var aCtx = new AudioContext();
 
-  var SOUND_TYPE = 0;
+  var soundType = 0;
+  window.getSoundType = function() { return soundType; }
+  window.setStartFrq = function(val) { soundType = val; }
 
 
 
@@ -262,17 +263,13 @@
     for (var i=0; i<touches.length; i++) {
       touches[i].oscillator = aCtx.createOscillator();
       // 0 stands for "sine wave"
-      touches[i].oscillator.type = SOUND_TYPE;
+      touches[i].oscillator.type = soundType;
       // The frequency of the sine wave is dependent on the position
       touches[i].oscillator.frequency.value = pixelToFrq(touches[i].pageY);
       touches[i].oscillator.connect(aCtx.destination);
       touches[i].oscillator.noteOn(0);
 
       ongoingTouches.push(touches[i]);
-    }
-
-    if (!animationRunning) {
-      startAnimation();
     }
   }
 
@@ -290,15 +287,15 @@
       var index = ongoingTouchIndexById(touches[i].identifier);
       if (index == -1)
         continue;
+      ongoingTouches[index].oscillator.noteOff(0);
 
       touches[i].oscillator = aCtx.createOscillator();
       // 0 stands for "sine wave"
-      touches[i].oscillator.type = SOUND_TYPE;
+      touches[i].oscillator.type = soundType;
       // The frequency of the sine wave is dependent on the position
       touches[i].oscillator.frequency.value = pixelToFrq(touches[i].pageY);
       touches[i].oscillator.connect(aCtx.destination);
 
-      ongoingTouches[index].oscillator.noteOff(0);
       touches[i].oscillator.noteOn(0);
       ongoingTouches.splice(index, 1, touches[i]);
     }
