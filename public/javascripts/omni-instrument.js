@@ -161,19 +161,22 @@
 
   var ongoingTouches = [];
 
-  var startFrq = 50;
-  var endFrq = 5000;
+  var startFrq = 100;
+  var endFrq = 4000;
+  // Yes, it's a cumbersome name
+  var log2OfEndFrqDividedByStartFrq = caltulateLog2OfEndFrqDividedByStartFrq();
   window.getStartFrq = function() { return startFrq; }
-  window.setStartFrq = function(val) { startFrq = val; }
+  window.setStartFrq = function(val) {
+    startFrq = val;
+    log2OfEndFrqDividedByStartFrq = caltulateLog2OfEndFrqDividedByStartFrq();
+  }
   window.getEndFrq   = function() { return endFrq; }
-  window.setEndFrq   = function(val) { endFrq = val; }
-
-  window.getRange = function() {
-    return endFrq - startFrq;
+  window.setEndFrq   = function(val) {
+    endFrq = val;
+    log2OfEndFrqDividedByStartFrq = caltulateLog2OfEndFrqDividedByStartFrq();
   }
 
   var STANDARD_COLOR_1 = "#e11";
-  var STANDARD_COLOR_2 = "#aaa"
 
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   var aCtx = new AudioContext();
@@ -206,12 +209,21 @@
             number: pitchName.slice(nonNumCounter)};
   }
 
+  // function pixelToFrq(pixelNum) {
+  //   return (((canvas.height - pixelNum)/canvas.height) * getRange()) + startFrq;
+  // }
+
+  function caltulateLog2OfEndFrqDividedByStartFrq() {
+    return Math.log(endFrq/startFrq)/Math.LN2;
+  }
+
+  // The creation of this formulas was based on simple trial and error.
   function pixelToFrq(pixelNum) {
-    return (((canvas.height - pixelNum)/canvas.height) * getRange()) + startFrq;
+    return startFrq * Math.pow(2, ((pixelNum-canvas.height)/canvas.height) * -log2OfEndFrqDividedByStartFrq);
   }
 
   function frqToPixel(frq) {
-    return canvas.height - (Math.round(((frq-getStartFrq())/getRange()) * canvas.height));
+    return canvas.height - (Math.log(frq/startFrq)/Math.LN2)/log2OfEndFrqDividedByStartFrq * canvas.height;
   }
 
   function ongoingTouchIndexById(idToFind) {
@@ -331,15 +343,14 @@
     }
   }
 
-  // You must always add 0.5 in order that the line is drawn in the right way.
   function drawLines() {
     c.clearRect(0, 0, canvas.width, canvas.height);
 
     for (var pitch in PITCHES) {
       var pixelNum = frqToPixel(pitch);
       c.beginPath();
-      c.moveTo(0.5, pixelNum + 0.5);
-      c.lineTo(canvas.width + 0.5, pixelNum + 0.5);
+      c.moveTo(0, pixelNum);
+      c.lineTo(canvas.width, pixelNum);
       c.stroke();
 
       c.save();
