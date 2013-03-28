@@ -152,16 +152,9 @@
   }
 
   var TEXT_OFFSET = 3;
-  var RADIUS = 40;
 
   var canvas = document.getElementById('canvas');
   var c = canvas.getContext('2d');
-
-  var linesCache = null;
-
-  var intervalId;
-  var animationRunning = false;
-  var intervalLength = 25;
 
   // Set font to Ubuntu in the ultra-light version
   c.font = "normal 300 10px Ubuntu";
@@ -251,8 +244,6 @@
     you resize the browser window and the canvas goes will be cleared.
     */
 
-    // When resizing reset the cache in order that the lines are drawn with the new dimensions
-    linesCache = null;
     drawLines();
   }
 
@@ -345,11 +336,6 @@
 
   // You must always add 0.5 in order that the line is drawn in the right way.
   function drawLines() {
-    if (linesCache) {
-      c.putImageData(linesCache, 0, 0);
-      return;
-    }
-
     c.clearRect(0, 0, canvas.width, canvas.height);
 
     for (var pitch in PITCHES) {
@@ -370,41 +356,6 @@
                  (TEXT_OFFSET+0.75) + textWidth,
                  pixelNum - (TEXT_OFFSET-2));
       c.restore();
-
-      linesCache = c.getImageData(0, 0, canvas.width, canvas.height);
-    }
-  }
-
-  // Draws a simple circle at the given position
-  function drawCircle(x, y) {
-    c.save();
-    c.fillStyle = STANDARD_COLOR_2;
-    c.beginPath();
-    c.arc(x*window.devicePixelRatio, y*window.devicePixelRatio, RADIUS*window.devicePixelRatio, 0, 2*Math.PI, true);
-    c.fill();
-    c.stroke();
-    c.restore();
-  }
-
-  function startAnimation() {
-    if (animationRunnging)
-      return;
-
-    intervalId = window.setInterval(iterate, intervalLength);
-    animationRunning = true;
-  }
-
-  function iterate() {
-    if(ongoingTouches.length == 0) {
-      clearInterval(intervalId);
-      animationRunning = false;
-      drawLines();
-      return;
-    }
-
-    drawLines();
-    for (var i=0; i<ongoingTouches.length; i++) {
-      drawCircle(ongoingTouches[i].pageX, ongoingTouches[i].pageY);
     }
   }
 
