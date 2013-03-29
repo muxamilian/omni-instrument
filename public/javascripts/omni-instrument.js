@@ -267,6 +267,11 @@
     startHandler(event);
   }, false);
 
+  function calculateSecondsUntilCycleIsFinished(frq, startedPlaying) {
+    // TODO
+    return 0;
+  }
+
   function startHandler(event) {
     event.preventDefault();
     var touches = event.changedTouches;
@@ -278,7 +283,9 @@
       // The frequency of the sine wave is dependent on the position
       touches[i].oscillator.frequency.value = pixelToFrq(touches[i].pageY);
       touches[i].oscillator.connect(aCtx.destination);
+
       touches[i].oscillator.noteOn(0);
+      touches[i].startedPlaying = aCtx.currentTime;
 
       ongoingTouches.push(touches[i]);
     }
@@ -298,7 +305,10 @@
       var index = ongoingTouchIndexById(touches[i].identifier);
       if (index == -1)
         continue;
-      ongoingTouches[index].oscillator.noteOff(0);
+
+      var timeToWait = calculateSecondsUntilCycleIsFinished(ongoingTouches[index].oscillator.frequency.value,
+                                                            ongoingTouches[i].startedPlaying);
+      ongoingTouches[index].oscillator.noteOff(aCtx.currentTime + timeToWait);
 
       touches[i].oscillator = aCtx.createOscillator();
       // 0 stands for "sine wave"
@@ -308,6 +318,8 @@
       touches[i].oscillator.connect(aCtx.destination);
 
       touches[i].oscillator.noteOn(0);
+      touches[i].startedPlaying = aCtx.currentTime;
+
       ongoingTouches.splice(index, 1, touches[i]);
     }
   }
@@ -337,7 +349,10 @@
       if (index == -1)
         continue;
 
-      ongoingTouches[index].oscillator.noteOff(0);
+      var timeToWait = calculateSecondsUntilCycleIsFinished(ongoingTouches[index].oscillator.frequency.value,
+                                                            ongoingTouches[i].startedPlaying);
+      ongoingTouches[index].oscillator.noteOff(aCtx.currentTime + timeToWait);
+
       ongoingTouches.splice(index, 1);
     }
   }
@@ -383,5 +398,6 @@
   window.c = c;
   window.frqToPixel = frqToPixel;
   window.pixelToFrq = pixelToFrq;
+  window.aCtx = aCtx;
 
 })();
