@@ -164,6 +164,8 @@
   var startFrq = 200;
   var endFrq = 3500;
 
+  var CYCLES_UNTIL_NEXT_NOTE = 2;
+
   // Yes, it's a cumbersome name
   var log2OfEndFrqDividedByStartFrq = caltulateLog2OfEndFrqDividedByStartFrq();
   window.getStartFrq = function() { return startFrq; }
@@ -237,6 +239,15 @@
     return -1;
   }
 
+  function calculateSecondsUntilCycleIsFinished(frq, startedPlaying) {
+    started = Date.now()
+    currentTime = aCtx.currentTime;
+    var startUntilNow = currentTime - startedPlaying;
+    var cyclesUntilNow = Math.floor(startUntilNow * frq);
+    var cyclesWhereChangeBetweenNotesOccurs = cyclesUntilNow + CYCLES_UNTIL_NEXT_NOTE;
+    return startedPlaying + (cyclesWhereChangeBetweenNotesOccurs / frq);
+  }
+
 
 
   /* ********************************************** *
@@ -266,11 +277,6 @@
     event.changedTouches = [event];
     startHandler(event);
   }, false);
-
-  function calculateSecondsUntilCycleIsFinished(frq, startedPlaying) {
-    // TODO
-    return 0;
-  }
 
   function startHandler(event) {
     event.preventDefault();
@@ -308,7 +314,7 @@
 
       var timeToWait = calculateSecondsUntilCycleIsFinished(ongoingTouches[index].oscillator.frequency.value,
                                                             ongoingTouches[i].startedPlaying);
-      ongoingTouches[index].oscillator.noteOff(aCtx.currentTime + timeToWait);
+      ongoingTouches[index].oscillator.noteOff(timeToWait);
 
       touches[i].oscillator = aCtx.createOscillator();
       // 0 stands for "sine wave"
@@ -317,8 +323,8 @@
       touches[i].oscillator.frequency.value = pixelToFrq(touches[i].pageY);
       touches[i].oscillator.connect(aCtx.destination);
 
-      touches[i].oscillator.noteOn(0);
-      touches[i].startedPlaying = aCtx.currentTime;
+      touches[i].oscillator.noteOn(timeToWait);
+      touches[i].startedPlaying = timeToWait;
 
       ongoingTouches.splice(index, 1, touches[i]);
     }
@@ -351,7 +357,7 @@
 
       var timeToWait = calculateSecondsUntilCycleIsFinished(ongoingTouches[index].oscillator.frequency.value,
                                                             ongoingTouches[i].startedPlaying);
-      ongoingTouches[index].oscillator.noteOff(aCtx.currentTime + timeToWait);
+      ongoingTouches[index].oscillator.noteOff(timeToWait);
 
       ongoingTouches.splice(index, 1);
     }
