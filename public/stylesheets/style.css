@@ -22,3 +22,18 @@ canvas {
   width: 100%;
   height: 100%;
 }
+#options-modal {
+  display: none;
+}
+#options-button {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+}
+#frequency-form input,
+#wave-type-form input,
+#frequency-form select,
+#wave-type-form select {
+  margin-left: 5px;
+  margin-right: 5px;
+}

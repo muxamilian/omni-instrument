@@ -3,3 +3,28 @@ extends layout
 block content
   canvas#canvas
   script(src='/javascripts/omni-instrument.js')
+
+  a#options-button.btn.btn-inverse.btn-small(href='#options-modal', role='button', data-toggle='modal')
+    i(class='icon-info-sign')
+
+  #options-modal.modal.hide.fade
+    .modal-header
+      button.close(type='button', data-dismiss='modal', aria-hidden='true') ×
+      h3 Options
+    .modal-body
+      form#frequency-form.form-inline
+        label(for='from') Frequency range from
+        input#from.input-small(type='text', placeholder='From')
+        label(for='to') To
+        input#to.input-small(type='text', placeholder='To')
+      form#wave-type-form.form-inline
+        label(for='wave-type') Wave type
+        select#wave-type
+          option(value='0') Sine wave
+          option(value='1') Square wave
+          option(value='2') Sawtooth wave
+          option(value='3') Triangle wave
+    .modal-footer
+      button.btn(data-dismiss='modal', aria-hidden='true') Close
+
+  script(src='/javascripts/omni-ui.js')
