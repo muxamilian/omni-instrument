@@ -161,8 +161,8 @@
 
   var ongoingTouches = [];
 
-  var startFrq = 100;
-  var endFrq = 4000;
+  var startFrq = 200;
+  var endFrq = 3500;
 
   // Yes, it's a cumbersome name
   var log2OfEndFrqDividedByStartFrq = caltulateLog2OfEndFrqDividedByStartFrq();
@@ -373,10 +373,16 @@
                  TEXT_OFFSET,
                  pixelNum - TEXT_OFFSET);
       var textWidth = c.measureText(splitPitchName(PITCHES[pitch]).text).width;
-      c.font = "normal 300 9px Ubuntu";
+      // When enabling this, the numbers and the Hertz are not drawn on mobile devices
+      // c.font = "normal 300 9px Ubuntu";
       c.fillText(splitPitchName(PITCHES[pitch]).number,
-                 (TEXT_OFFSET+0.75) + textWidth,
-                 pixelNum - (TEXT_OFFSET-2));
+                 (TEXT_OFFSET + 0.75) + textWidth,
+                 pixelNum - (TEXT_OFFSET - 2));
+      var pitchText = pitch + " Hz"
+      textWidth = c.measureText(pitchText).width;
+      c.fillText(pitchText,
+                 (canvas.width - TEXT_OFFSET) - textWidth,
+                 pixelNum - TEXT_OFFSET)
       c.restore();
     }
   }
