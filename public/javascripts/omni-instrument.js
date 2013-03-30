@@ -164,7 +164,7 @@
   var startFrq = 200;
   var endFrq = 3500;
 
-  var CYCLES_UNTIL_NEXT_NOTE = 2;
+  var TIME_UNTIL_NEXT_NOTE = 0.015;
 
   // Yes, it's a cumbersome name
   var log2OfEndFrqDividedByStartFrq = caltulateLog2OfEndFrqDividedByStartFrq();
@@ -244,7 +244,7 @@
     currentTime = aCtx.currentTime;
     var startUntilNow = currentTime - startedPlaying;
     var cyclesUntilNow = Math.floor(startUntilNow * frq);
-    var cyclesWhereChangeBetweenNotesOccurs = cyclesUntilNow + CYCLES_UNTIL_NEXT_NOTE;
+    var cyclesWhereChangeBetweenNotesOccurs = cyclesUntilNow + Math.round(TIME_UNTIL_NEXT_NOTE * frq);
     return startedPlaying + (cyclesWhereChangeBetweenNotesOccurs / frq);
   }
 
@@ -309,11 +309,12 @@
 
     for (var i=0; i<touches.length; i++) {
       var index = ongoingTouchIndexById(touches[i].identifier);
-      if (index == -1)
+      if (index == -1) {
         continue;
+      }
 
       var timeToWait = calculateSecondsUntilCycleIsFinished(ongoingTouches[index].oscillator.frequency.value,
-                                                            ongoingTouches[i].startedPlaying);
+                                                            ongoingTouches[index].startedPlaying);
       ongoingTouches[index].oscillator.noteOff(timeToWait);
 
       touches[i].oscillator = aCtx.createOscillator();
@@ -352,11 +353,12 @@
 
     for (var i=0; i<touches.length; i++) {
       var index = ongoingTouchIndexById(touches[i].identifier);
-      if (index == -1)
+      if (index == -1) {
         continue;
+      }
 
       var timeToWait = calculateSecondsUntilCycleIsFinished(ongoingTouches[index].oscillator.frequency.value,
-                                                            ongoingTouches[i].startedPlaying);
+                                                            ongoingTouches[index].startedPlaying);
       ongoingTouches[index].oscillator.noteOff(timeToWait);
 
       ongoingTouches.splice(index, 1);
