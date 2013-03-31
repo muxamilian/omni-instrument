@@ -157,7 +157,7 @@
   var c = canvas.getContext('2d');
 
   // Set font to Ubuntu in the ultra-light version
-  c.font = "normal 300 10px Ubuntu";
+  c.font = "normal 400 10px Ubuntu";
 
   var ongoingTouches = [];
 
@@ -203,7 +203,7 @@
     }
   }());
 
-  function splitPitchName(pitchName) {
+  function splitToneName(pitchName) {
     var nonNumCounter = 0;
     for (var i=0; i<pitchName.length; i++) {
       if (isDigit(pitchName.charAt(i)))
@@ -227,6 +227,7 @@
     return canvas.height - (Math.log(frq/startFrq)/Math.LN2)/log2OfEndFrqDividedByStartFrq * canvas.height;
   }
 
+  // I have no idea where this weird 'identifier' comes from...
   function ongoingTouchIndexById(idToFind) {
     for (var i=0; i<ongoingTouches.length; i++) {
       var id = ongoingTouches[i].identifier;
@@ -239,6 +240,9 @@
     return -1;
   }
 
+  // Calculates the moment, where the current note's cycle is endend.
+  // This is necessary because otherwise you hear crackling, when you
+  // change the note
   function calculateSecondsUntilCycleIsFinished(frq, startedPlaying) {
     started = Date.now()
     currentTime = aCtx.currentTime;
@@ -365,6 +369,12 @@
     }
   }
 
+
+
+  /* ********************** *
+   * Funtctions for drawing *
+   * ********************** */
+
   function drawLines() {
     c.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -377,20 +387,21 @@
 
       c.save();
       c.fillStyle = STANDARD_COLOR_1;
-      c.fillText(splitPitchName(PITCHES[pitch]).text,
+      c.fillText(splitToneName(PITCHES[pitch]).text,
                  TEXT_OFFSET,
                  pixelNum - TEXT_OFFSET);
-      var textWidth = c.measureText(splitPitchName(PITCHES[pitch]).text).width;
+      var textWidth = c.measureText(splitToneName(PITCHES[pitch]).text).width;
       // When enabling this, the numbers and the Hertz are not drawn on mobile devices
-      // c.font = "normal 300 9px Ubuntu";
-      c.fillText(splitPitchName(PITCHES[pitch]).number,
+      // THIS IS REALLY STRANGE
+      // c.font = "normal 400 9px Ubuntu";
+      c.fillText(splitToneName(PITCHES[pitch]).number,
                  (TEXT_OFFSET + 0.75) + textWidth,
                  pixelNum - (TEXT_OFFSET - 2));
-      var pitchText = pitch + " Hz"
+      var pitchText = pitch + " Hz";
       textWidth = c.measureText(pitchText).width;
       c.fillText(pitchText,
                  (canvas.width - TEXT_OFFSET) - textWidth,
-                 pixelNum - TEXT_OFFSET)
+                 pixelNum - TEXT_OFFSET);
       c.restore();
     }
   }
