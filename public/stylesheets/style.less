@@ -32,6 +32,16 @@ canvas {
 
 #options-modal {
   display: none;
+
+  .control-group {
+    display: inline-block;
+  }
+
+  input, select, label {
+    display: inline-block;
+    margin-left: 5px;
+    margin-right: 5px;
+  }
 }
 
 #options-button {
@@ -40,9 +50,6 @@ canvas {
   right: 20px;
 }
 
-#frequency-form, #wave-type-form {
-  input, select {
-    margin-left: 5px;
-    margin-right: 5px;
-  }
+#errors {
+  display: none;
 }

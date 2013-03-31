@@ -12,12 +12,16 @@ block content
       button.close(type='button', data-dismiss='modal', aria-hidden='true') ×
       h3 Options
     .modal-body
-      form#frequency-form.form-inline
-        label(for='from') Frequency range from
-        input#from.input-small(type='text', placeholder='From')
+      p#errors.text-error
+      | Frequency range
+      .control-group
+        label(for='from') from
+        input#from.input-small(type='text', placeholder='from')
+      .control-group
         label(for='to') to
-        input#to.input-small(type='text', placeholder='To')
-      form#wave-type-form.form-inline
+        input#to.input-small(type='text', placeholder='to')
+      br
+      .control-group
         label(for='wave-type') Wave type
         select#wave-type
           option(value='0') Sine wave

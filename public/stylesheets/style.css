@@ -25,15 +25,21 @@ canvas {
 #options-modal {
   display: none;
 }
+#options-modal .control-group {
+  display: inline-block;
+}
+#options-modal input,
+#options-modal select,
+#options-modal label {
+  display: inline-block;
+  margin-left: 5px;
+  margin-right: 5px;
+}
 #options-button {
   position: absolute;
   bottom: 20px;
   right: 20px;
 }
-#frequency-form input,
-#wave-type-form input,
-#frequency-form select,
-#wave-type-form select {
-  margin-left: 5px;
-  margin-right: 5px;
+#errors {
+  display: none;
 }

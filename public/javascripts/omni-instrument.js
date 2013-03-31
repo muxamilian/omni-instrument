@@ -172,12 +172,14 @@
   window.setStartFrq = function(val) {
     startFrq = val;
     log2OfEndFrqDividedByStartFrq = caltulateLog2OfEndFrqDividedByStartFrq();
+    resizeCanvas();
   }
 
   window.getEndFrq   = function() { return endFrq; }
   window.setEndFrq   = function(val) {
     endFrq = val;
     log2OfEndFrqDividedByStartFrq = caltulateLog2OfEndFrqDividedByStartFrq();
+    resizeCanvas();
   }
 
   var STANDARD_COLOR_1 = "#e11";
