@@ -185,6 +185,10 @@
   var STANDARD_COLOR_1 = "#e11";
 
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (window.AudioContext == null) {
+    alert("Sorry, but your browser doesn't support playing music and stuff ;)\nChrome and Safari work for sure!")
+  }
+
   var aCtx = new AudioContext();
 
   // 0 = Sine wave, 1 = Square wave, 2 = Sawtooth wave, 3 = Triangle wave
